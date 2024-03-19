@@ -5,7 +5,6 @@ import streamlit as st
 
 st.title('复杂的Streamlit示例')
 
-# 侧边栏
 st.sidebar.header('用户输入')
 user_input = st.sidebar.text_input('请输入您的名字：')
 

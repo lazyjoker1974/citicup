@@ -3,7 +3,6 @@ import pandas as pd
 import seaborn as sns
 import streamlit as st
 
-# 页面标题
 st.title('复杂的Streamlit示例')
 
 # 侧边栏

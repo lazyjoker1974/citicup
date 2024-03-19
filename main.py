@@ -1,9 +1,15 @@
+import subprocess
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
 
-st.title('复杂的Streamlit示例')
+
+def install_dependencies():
+    subprocess.check_call("pip install -r requirement.txt".split())
+
+install_dependencies()
 
 st.sidebar.header('用户输入')
 user_input = st.sidebar.text_input('请输入您的名字：')

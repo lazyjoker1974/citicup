@@ -1,15 +1,6 @@
-import subprocess
-
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import streamlit as st
-
-
-def install_dependencies():
-    subprocess.check_call("pip install -r requirement.txt".split())
-
-install_dependencies()
 
 st.sidebar.header('用户输入')
 user_input = st.sidebar.text_input('请输入您的名字：')
@@ -37,8 +28,7 @@ if st.checkbox('显示数据摘要'):
     st.write(data.describe())
 
 if st.checkbox('显示数据散点图'):
-    sns.pairplot(data)
-    st.pyplot()
+    st.write(data.plot.scatter(x='A', y='B'))
 
 # 用户反馈
 st.subheader('用户反馈')

@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 from graphviz import Digraph, Source
-
+#okok
 
 def sub_company(df, not_first_layer): # 给定dataframe，返回edges，以及子公司的(company, ticker)对
     if df.shape[0]:

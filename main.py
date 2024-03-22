@@ -1,9 +1,12 @@
 from collections import defaultdict
+from itertools import groupby
 
 import pandas as pd
+import pygraphviz as pgv
 import streamlit as st
 from graphviz import Digraph, Source
 from streamlit_agraph import Config, Edge, Node, agraph
+from streamlit_react_flow import react_flow
 
 
 def get_top_n_subsidiaries(edges2, n=5): # 取每个公司前 n 个子公司
@@ -39,56 +42,168 @@ def search(data, input_ticker):
     edges = []
     new_edges, subsidiary = sub_company(data[data['Symbol'] == input_ticker], not_first_layer=False)
     while True:
-        edges = edges + new_edges
-        gen = list((sub_company(data[data['Symbol'] == ticker], not_first_layer=company) for company, ticker in subsidiary))
-        new_edges, subsidiary = [edge for edges, _ in gen for edge in edges], [temp for _, temps in gen for temp in temps]
+        edges = edges + [i + (level,) for i in new_edges]
         level += 1
+        gen = list((sub_company(data[data['Symbol'] == ticker], not_first_layer=company) for company, ticker in subsidiary))
+        new_edges, subsidiary = [edge + (level,) for edges, _ in gen for edge in edges], [temp for _, temps in gen for temp in temps]
         if len(subsidiary) == 0 or level == 3:
             break
+    edges = [edge for edge in edges if edge[6] == '1' or (not pd.isnull(edge[2]) and edge[2] > 30)] # excess 30%
+    return edges
 
+def Shareholder(df, not_first_layer): # 给定dataframe，返回edges，以及子公司的(company, ticker)对
+    if df.shape[0]:
+        if not_first_layer:
+            edges = list(zip([not_first_layer] * df.shape[0], df['Shareholder_Name'], df['Shareholding_Ratio'].astype(float), df['Shares_Number'], df['is_foreign'], df['Shareholder_Nature'], df['is_subsidiary_listed']))
+        else:
+            edges = list(zip(df['Name'], df['Shareholder_Name'], df['Shareholding_Ratio'].astype(float), df['Shares_Number'], df['is_foreign'], df['Shareholder_Nature'], df['is_subsidiary_listed']))
+        descendant = df[~df['Sub_Symbol'].isna()]
+        return edges, list(zip(descendant['Shareholder_Name'], descendant['Sub_Symbol']))
+    else:
+        return [], []
+
+def search_shareholder(data, input_ticker):
+    level = -1
+    edges = []
+    new_edges, shareholders = Shareholder(data[data['Symbol'] == input_ticker], not_first_layer=False)
+    while True:
+        edges = edges + [i + (level,) for i in new_edges]
+        level -= 1
+        gen = list((Shareholder(data[data['Symbol'] == ticker], not_first_layer=company) for company, ticker in shareholders))
+        new_edges, shareholders = [edge + (level,) for edges, _ in gen for edge in edges], [temp for _, temps in gen for temp in temps]
+        if len(shareholders) == 0 or level == -3:
+            break
     edges = [edge for edge in edges if edge[6] == '1' or not pd.isnull(edge[2])]
     return edges
 
+data = pd.read_csv('data/data.csv', dtype=str)
+df = pd.read_csv('data/十大股东.csv', dtype=str)
+user_input = st.text_input("Enter stock code (e.g.: 000009)")
 
-page = st.sidebar.radio("Select Page", ["Subsidiary", "Shareholder"])
-
-if page == "Subsidiary":
-    st.title("Subsidiary")
-
-    ####
-    data = pd.read_csv('data/data.csv', dtype=str)
-    user_input = st.text_input("Enter stock code (e.g.: 000009)")
-
-    try:
-        top_n = int(st.text_input("Enter the number of companies with the highest shareholding ratio (e.g.: 5):"))
-    except:
-        top_n = 5
-        
-    if user_input:
-        try:
-            stock_name = get_stock_name(data, user_input)
-            st.markdown(f'<h5 style="color: gray;">Equity Structure Diagram of {user_input}（{stock_name}）:</h5>', unsafe_allow_html=True)
-            edges = search(data, user_input)
-            edges1 = [edge for edge in edges if edge[6] == '1']
-            edges2 = [edge for edge in edges if edge[6] == '0']
-            edges = edges1 + get_top_n_subsidiaries(edges2, n=top_n) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
-            nodes_list = []
-            edges_list = []
-            for name in list(set([edge[0] for edge in edges] + [edge[1] for edge in edges])):
-                if name in list(set([edge[0] for edge in edges])):
-                    nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(255, 228, 196, 0.5)", clickNode=True, font={'bold': True, 'color': '#FF8C00'}))
-
-                else:
-                    nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(128,128,128,0.1)", clickNode=True, font={'bold': False}))
-            for edge in edges:
-                edges_list.append(Edge(source=edge[0], label=str(edge[5][5:]) + (', 持股比例: ' + str(edge[2]) + '%' if not pd.isnull(edge[2]) else ''), target=edge[1], length=max(200, 10*len(edges)))) 
-            
-            config = Config(width=900, height=600, directed=True, physics=True, hierarchical=False, )
-            return_value = agraph(nodes=nodes_list, edges=edges_list, config=config)
-        except:
-            pass
-    ####
+try:
+    top_n = int(st.text_input("Enter the number of companies with the highest shareholding ratio (e.g.: 5):"))
+except:
+    top_n = 5
     
-elif page == "Shareholder":
-    st.title("Shareholder")
-    #### 股东的部分在这里写（待续）
+            
+import streamlit as st
+from streamlit_react_flow import react_flow
+
+if user_input:
+    try:
+        stock_name = get_stock_name(data, user_input)
+        st.markdown(f'<h5 style="color: gray;">Equity Structure Diagram of {user_input}（{stock_name}）:</h5>', unsafe_allow_html=True)
+        edges = search(data, user_input)
+        edges_shareholder = search_shareholder(df, user_input)
+        edges1 = [edge for edge in edges if edge[6] == '1']
+        edges2 = [edge for edge in edges if edge[6] == '0']
+        edges = edges1 + get_top_n_subsidiaries(edges2, n=top_n) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
+        edges_layer_0_1 = [i for i in edges if i[7] == 0]
+        edges_layer_1_2 = [i for i in edges if i[7] == 1]
+        edges_layer_2_3 = [i for i in edges if i[7] == 2]
+        edges_shareholder_0_1 = [i for i in edges_shareholder if i[7] == -1]
+        edges_shareholder_1_2 = [i for i in edges_shareholder if i[7] == -2]
+        number_of_layer1 = len(edges_layer_0_1)
+        number_of_layer2 = len(edges_layer_1_2)
+        number_of_layer3 = len(edges_layer_2_3)
+        number_of_layer_neg1 = len(edges_shareholder_0_1)
+        number_of_layer_neg2 = len(edges_shareholder_1_2)
+        target_company_name = edges_layer_0_1[0][0]
+        x, y = 200, 150
+        elements_down_temp = []
+        elements_up_temp = []
+        elements1, elements2 = [{"id": target_company_name, "data": {"label": target_company_name}, "position": {"x": x, "y": y}}], []
+        if number_of_layer1:
+            x_interval = 200
+            x_layer1_first = x - int(number_of_layer1 / 2) * x_interval
+            for index, edge in enumerate(edges_layer_0_1): # 目标公司 - 子公司1-n
+                x_pos = x - int(number_of_layer1 / 2) * x_interval + x_interval * index
+                y_pos = y + 200
+                elements_down_temp.append(edge[1])
+                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "120px"}}])
+                elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
+        if number_of_layer_neg1:
+            x_interval = 200
+            x_layer1_first = x - int(number_of_layer_neg1 / 2) * x_interval
+            for index, edge in enumerate(edges_shareholder_0_1): # 目标公司 - 子公司1-n
+                x_pos = x - int(number_of_layer_neg1 / 2) * x_interval + x_interval * index
+                y_pos = y - 450
+                elements_up_temp.append(edge[1])
+                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "250px"}}])
+                elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[1], "target": edge[0], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
+        
+        if number_of_layer2:
+            edges_layer_1_2.sort(key=lambda x: x[0])
+            edges_layer_1_2 = [list(group) for key, group in groupby(edges_layer_1_2, key=lambda x: x[0])]
+            edges_layer_1_2 = [[i for i in sublist if i[1] not in [i[0][0] for i in edges_layer_1_2]] for sublist in edges_layer_1_2]
+            x_pos = x_layer1_first
+            for mini_edges_layer_1_2 in edges_layer_1_2:
+                company = mini_edges_layer_1_2[0][0]
+                number = len(mini_edges_layer_1_2)
+                x_interval = 100
+                for element in elements1:
+                    if element['id'] == company:
+                        position = element['position']
+                        break
+                x = position['x']
+                for index, edge in enumerate(mini_edges_layer_1_2): # 子上市公司k - 子子公司k1, ..., kn
+                    x_pos += x_interval
+                    y_pos = y + 600
+                    if edge[1] not in elements_down_temp:
+                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "200px"}}])
+                        elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
+            
+        if number_of_layer_neg2:
+            edges_shareholder_1_2.sort(key=lambda x: x[0])
+            edges_shareholder_1_2 = [list(group) for key, group in groupby(edges_shareholder_1_2, key=lambda x: x[0])]
+            edges_shareholder_1_2 = [[i for i in sublist if i[1] not in [i[0][0] for i in edges_shareholder_1_2]] for sublist in edges_shareholder_1_2]
+            x_pos = x_layer1_first
+            for mini_edges_layer_1_2 in edges_shareholder_1_2:
+                company = mini_edges_layer_1_2[0][0]
+                number = len(mini_edges_layer_1_2)
+                x_interval = 120
+                for element in elements1:
+                    if element['id'] == company:
+                        position = element['position']
+                        break
+                x = position['x']
+                for index, edge in enumerate(mini_edges_layer_1_2): # 子上市公司k - 子子公司k1, ..., kn
+                    x_pos += x_interval
+                    y_pos = y - 800
+                    if edge[1] not in elements_up_temp:
+                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "200px"}}])
+                        elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[1], "target": edge[0], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
+
+        elements = elements1 + elements2
+        flowStyles = {"height": 500, "width": 1000}
+        react_flow("tree", elements=elements, flow_styles=flowStyles)
+    except:
+        pass
+
+
+
+
+
+# if user_input:
+#     try:
+#         stock_name = get_stock_name(data, user_input)
+#         st.markdown(f'<h5 style="color: gray;">Equity Structure Diagram of {user_input}（{stock_name}）:</h5>', unsafe_allow_html=True)
+#         edges = search(data, user_input)
+#         edges1 = [edge for edge in edges if edge[6] == '1']
+#         edges2 = [edge for edge in edges if edge[6] == '0']
+#         edges = edges1 + get_top_n_subsidiaries(edges2, n=top_n) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
+#         nodes_list = []
+#         edges_list = []
+#         for name in list(set([edge[0] for edge in edges] + [edge[1] for edge in edges])):
+#             if name in list(set([edge[0] for edge in edges])):
+#                 nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(255, 228, 196, 0.5)", clickNode=True, font={'bold': True, 'color': '#FF8C00'}))
+
+#             else:
+#                 nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(128,128,128,0.1)", clickNode=True, font={'bold': False}))
+#         for edge in edges:
+#             edges_list.append(Edge(source=edge[0], label=str(edge[5][5:]) + (', 持股比例: ' + str(edge[2]) + '%' if not pd.isnull(edge[2]) else ''), target=edge[1], length=max(200, 10*len(edges)))) 
+        
+#         config = Config(width=900, height=600, directed=True, physics=True, hierarchical=True, )
+#         return_value = agraph(nodes=nodes_list, edges=edges_list, config=config)
+#     except:
+#         pass

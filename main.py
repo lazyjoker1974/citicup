@@ -11,14 +11,13 @@ with st.sidebar:
     st.title('Exploration Panel')
 
 
-def get_top_n_subsidiaries(edges2, n=5):
+def get_top_n_subsidiaries(edges2, n=5): # 取每个公司前 n 个子公司
     subsidiaries_dict = defaultdict(list)
     for edge in edges2:
         company_name = edge[0]
         holding_ratio = edge[2]
         if holding_ratio:
             subsidiaries_dict[company_name].append(edge[1:])
-    # 取每个公司前 n 个子公司
     top_n_subsidiaries = {}
     for company, subsidiaries in subsidiaries_dict.items():
         sorted_subsidiaries = sorted(subsidiaries, key=lambda x: x[1], reverse=True)
@@ -56,8 +55,12 @@ def search(data, input_ticker):
     return edges
 
 data = pd.read_csv('data/data.csv', dtype=str)
-user_input = st.text_input("Enter stock code")
+user_input = st.text_input("Enter stock code (e.g.: 000009)")
 
+try:
+    top_n = int(st.text_input("Enter the number of companies with the highest shareholding ratio (e.g.: 5):"))
+except:
+    top_n = 5
     
 if user_input:
     try:
@@ -66,7 +69,7 @@ if user_input:
         edges = search(data, user_input)
         edges1 = [edge for edge in edges if edge[6] == '1']
         edges2 = [edge for edge in edges if edge[6] == '0']
-        edges = edges1 + get_top_n_subsidiaries(edges2, n=5) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
+        edges = edges1 + get_top_n_subsidiaries(edges2, n=top_n) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
         nodes_list = []
         edges_list = []
         for name in list(set([edge[0] for edge in edges] + [edge[1] for edge in edges])):

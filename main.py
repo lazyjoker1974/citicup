@@ -2,10 +2,10 @@ from collections import defaultdict
 from itertools import groupby
 
 import pandas as pd
-import pygraphviz as pgv
+# import pygraphviz as pgv
 import streamlit as st
-from graphviz import Digraph, Source
-from streamlit_agraph import Config, Edge, Node, agraph
+# from graphviz import Digraph, Source
+# from streamlit_agraph import Config, Edge, Node, agraph
 from streamlit_react_flow import react_flow
 
 

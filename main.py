@@ -1,5 +1,6 @@
+from collections import defaultdict
+
 import pandas as pd
-import streamlit
 import streamlit as st
 from graphviz import Digraph, Source
 from streamlit_agraph import Config, Edge, Node, agraph
@@ -8,7 +9,6 @@ st.set_page_config(page_title='Stock Relationships', page_icon=':chart_with_upwa
 st.title('Stock Relationships Visualization')
 with st.sidebar:
     st.title('Exploration Panel')
-from collections import defaultdict
 
 
 def get_top_n_subsidiaries(edges2, n=5):

@@ -89,6 +89,16 @@ except:
 import streamlit as st
 from streamlit_react_flow import react_flow
 
+with st.sidebar:
+    st.markdown("# 股权穿刺图查询软件")
+    st.markdown("通过搜索股票代码可以展示对应上市公司的股权穿刺图：")
+    st.markdown("<style> .red-dashed-box { border: 2px dashed red; padding: 5px; margin-bottom: 10px; } .black-solid-box { border: 2px solid black; padding: 5px; margin-bottom: 10px; } </style>", unsafe_allow_html=True)
+    st.markdown("<div class='red-dashed-box'>红色虚线框：海外实体</div>", unsafe_allow_html=True)
+    st.markdown("<div class='black-solid-box'>黑色实线框：国内实体</div>", unsafe_allow_html=True)
+    st.markdown("黑色字体：公司名称</div>", unsafe_allow_html=True)
+    st.markdown("<div style='color: blue;'>蓝色字体：控制人</div>", unsafe_allow_html=True)
+
+
 if user_input:
     try:
         stock_name = get_stock_name(data, user_input)
@@ -112,27 +122,38 @@ if user_input:
         x, y = 200, 150
         elements_down_temp = []
         elements_up_temp = []
-        elements1, elements2 = [{"id": target_company_name, "data": {"label": target_company_name}, "position": {"x": x, "y": y}}], []
-        if number_of_layer1:
+        elements1, elements2 = [{"id": target_company_name, "data": {"label": target_company_name}, "position": {"x": x, "y": y}}], [] # 目标企业
+        
+        if number_of_layer1: # 向下一次股权穿透
             x_interval = 200
             x_layer1_first = x - int(number_of_layer1 / 2) * x_interval
             for index, edge in enumerate(edges_layer_0_1): # 目标公司 - 子公司1-n
                 x_pos = x - int(number_of_layer1 / 2) * x_interval + x_interval * index
                 y_pos = y + 200
                 elements_down_temp.append(edge[1])
-                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "120px"}}])
+                style = {"width": "80px", "height": "120px"}
+                if edge[4] == '1': # 海外实体，用虚线红框边界
+                    style["border"] = "2px dashed red"
+                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                 elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
-        if number_of_layer_neg1:
+                
+        if number_of_layer_neg1: # 向上一次股权穿透
             x_interval = 200
             x_layer1_first = x - int(number_of_layer_neg1 / 2) * x_interval
             for index, edge in enumerate(edges_shareholder_0_1): # 目标公司 - 子公司1-n
                 x_pos = x - int(number_of_layer_neg1 / 2) * x_interval + x_interval * index
                 y_pos = y - 450
                 elements_up_temp.append(edge[1])
-                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "250px"}}])
+                style = {"width": "80px", "height": "250px"}
+                if edge[4] == '1': # 海外实体，用虚线红框边界
+                    style["border"] = "2px dashed red"
+                if '自然人' in edge[5]: # 实控人为 "color": "blue"
+                    style["color"] = "blue"
+                    
+                elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                 elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[1], "target": edge[0], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
         
-        if number_of_layer2:
+        if number_of_layer2: # 向下二次股权穿透
             edges_layer_1_2.sort(key=lambda x: x[0])
             edges_layer_1_2 = [list(group) for key, group in groupby(edges_layer_1_2, key=lambda x: x[0])]
             edges_layer_1_2 = [[i for i in sublist if i[1] not in [i[0][0] for i in edges_layer_1_2]] for sublist in edges_layer_1_2]
@@ -149,11 +170,14 @@ if user_input:
                 for index, edge in enumerate(mini_edges_layer_1_2): # 子上市公司k - 子子公司k1, ..., kn
                     x_pos += x_interval
                     y_pos = y + 600
+                    style = {"width": "80px", "height": "200px"}
                     if edge[1] not in elements_down_temp:
-                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "200px"}}])
+                        if edge[4] == '1': # 海外实体，用虚线红框边界
+                            style["border"] = "2px dashed red"
+                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                         elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
             
-        if number_of_layer_neg2:
+        if number_of_layer_neg2: # 向上二次股权穿透
             edges_shareholder_1_2.sort(key=lambda x: x[0])
             edges_shareholder_1_2 = [list(group) for key, group in groupby(edges_shareholder_1_2, key=lambda x: x[0])]
             edges_shareholder_1_2 = [[i for i in sublist if i[1] not in [i[0][0] for i in edges_shareholder_1_2]] for sublist in edges_shareholder_1_2]
@@ -171,7 +195,12 @@ if user_input:
                     x_pos += x_interval
                     y_pos = y - 800
                     if edge[1] not in elements_up_temp:
-                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": {"width": "80px", "height": "200px"}}])
+                        style = {"width": "80px", "height": "200px"}
+                        if edge[4] == '1': # 海外实体，用虚线红框边界
+                            style["border"] = "2px dashed red"
+                        if '自然人' in edge[5]: # 实控人为 "color": "blue"
+                            style["color"] = "blue"
+                        elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                         elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[1], "target": edge[0], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
 
         elements = elements1 + elements2
@@ -179,7 +208,6 @@ if user_input:
         react_flow("tree", elements=elements, flow_styles=flowStyles)
     except:
         pass
-
 
 
 

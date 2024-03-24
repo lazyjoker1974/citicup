@@ -30,9 +30,9 @@ def get_stock_name(data, ticker):
 def sub_company(df, not_first_layer): # 给定dataframe，返回edges，以及子公司的(company, ticker)对
     if df.shape[0]:
         if not_first_layer:
-            edges = list(zip([not_first_layer] * df.shape[0], df['RalatedParty'], df['DirectHoldingRatio'].astype(float), df['IndirectHoldingRatio'], df['is_foreign'], df['Relationship'], df['is_subsidiary_listed']))
+            edges = list(zip([not_first_layer] * df.shape[0], df['RalatedParty'], df['DirectHoldingRatio'].astype(float), df['big_ind'], df['is_foreign'], df['Relationship'], df['is_subsidiary_listed']))
         else:
-            edges = list(zip(df['Name'], df['RalatedParty'], df['DirectHoldingRatio'].astype(float), df['IndirectHoldingRatio'], df['is_foreign'], df['Relationship'], df['is_subsidiary_listed']))
+            edges = list(zip(df['Name'], df['RalatedParty'], df['DirectHoldingRatio'].astype(float), df['big_ind'], df['is_foreign'], df['Relationship'], df['is_subsidiary_listed']))
         descendant = df[~df['Sub_Symbol'].isna()]
         return edges, list(zip(descendant['RalatedParty'], descendant['Sub_Symbol']))
     else:
@@ -107,18 +107,12 @@ with st.sidebar:
     st.markdown("<font color='red'>这是风险等级 D</font>", unsafe_allow_html=True)
     st.markdown("# 按照业务分类")
     # st.markdown("<div style='background-color: pink; padding: 5px;'>业务1</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ffcccc; color: #990000; padding: 5px;'>业务1</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ffe6cc; color: #cc6600; padding: 5px;'>业务2</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ffffcc; color: #999900; padding: 5px;'>业务3</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #e6ffcc; color: #006600; padding: 5px;'>业务4</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ccfff5; color: #009999; padding: 5px;'>业务5</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #cce5ff; color: #003366; padding: 5px;'>业务6</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ccccff; color: #333399; padding: 5px;'>业务7</div>", unsafe_allow_html=True)
-    st.markdown("<div style='background-color: #ffccff; color: #990099; padding: 5px;'>业务8</div>", unsafe_allow_html=True)
-
-
-
-
+    st.markdown("<div style='background-color: #99ffcc; color: #000000; padding: 5px;'>研发类</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ffcc99; color: #000000; padding: 5px;'>生产类</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #e6ffcc; color: #000000; padding: 5px;'>业务类</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #cce5ff; color: #000000; padding: 5px;'>投资类</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #fce8e6; color: #000000; padding: 5px;'>其他类</div>", unsafe_allow_html=True)
+    
 
 if user_input:
     try:
@@ -165,6 +159,20 @@ if user_input:
                 style = {"width": "80px", "height": "120px"}
                 if edge[4] == '1': # 海外实体，用虚线红框边界
                     style["border"] = "2px dashed red"
+                                                    
+                if edge[3] == '研发':
+                    style["background-color"] = "#99ffcc"
+                elif edge[3] == '生产':
+                    style["background-color"] = "#ffcc99"
+                elif edge[3] == '业务':
+                    style["background-color"] = "#e6ffcc"
+                elif edge[3] == '投资':
+                    style["background-color"] = "#cce5ff"
+                else:
+                    style["background-color"] = "#fce8e6"           
+
+        
+        
                 elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                 elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
                 
@@ -205,6 +213,18 @@ if user_input:
                     if edge[1] not in elements_down_temp:
                         if edge[4] == '1': # 海外实体，用虚线红框边界
                             style["border"] = "2px dashed red"
+                                
+                        if edge[3] == '研发':
+                            style["background-color"] = "#99ffcc"
+                        elif edge[3] == '生产':
+                            style["background-color"] = "#ffcc99"
+                        elif edge[3] == '业务':
+                            style["background-color"] = "#e6ffcc"
+                        elif edge[3] == '投资':
+                            style["background-color"] = "#cce5ff"
+                        else:
+                            style["background-color"] = "#fce8e6"   
+                    
                         elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                         elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
             

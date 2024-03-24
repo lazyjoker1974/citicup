@@ -4,74 +4,74 @@
 
 Develop a software for querying the equity structure diagram, where users can view the equity structure diagram of a corresponding listed company by entering the stock code and the number of companies with the highest shareholding ratio.
 
-#### 功能需求
+#### Functional Requirements
 
-- 用户输入股票代码，系统显示该公司的股权穿透图。
-- 显示股权穿透图的各层级关系，包括上市公司、子公司、控制人等。
-- 对股权穿透图进行分类标注，例如海外实体、国内实体的区分，股东公司和股东控制人的区分。
-- 显示每个公司的名称、持股比例（子公司只留下持股比例大于30%的）等信息。
-- 提供风险等级说明，根据风险等级对不同公司进行标注。
-- 显示子公司的所属行业分类，并用直观的颜色标注。
+* Users input a stock code, and the system displays the equity structure diagram of the corresponding company.
+* Display the hierarchical relationships in the equity structure diagram, including listed companies, subsidiaries, and controllers.
+* Classify and label the equity structure diagram, distinguishing between overseas entities, domestic entities, shareholder companies, and shareholder controllers.
+* Display information such as the name of each company and the shareholding ratio (only subsidiaries with a shareholding ratio greater than 30% are retained).
+* Provide an explanation of the risk level and label different companies according to their risk level.
+* Display the industry classification of subsidiaries and use intuitive colors for labeling.
 
-#### 非功能需求
+#### Non-functional Requirements
 
-* 用户界面友好直观 : 界面设计应简洁明了，操作流畅，使用户能够轻松理解和使用软件。
-* 查询结果实时显示 : 查询结果应当快速显示，不应有明显的延迟，提供良好的用户体验。
-* 系统稳定可靠 : 系统应具备良好的稳定性和可靠性，避免出现崩溃或异常情况。
-* 数据安全性 : 用户输入信息应得到有效保护，不会被未经授权的人员访问或篡改。
-* 兼容性 : 软件应具备良好的兼容性，能够在不同操作系统和浏览器上正常运行。
-* 易维护性 : 代码应具备良好的结构和注释，方便后续维护和修改。
+* User-Friendly Interface: The interface design should be simple and clear, with smooth operation, allowing users to easily understand and use the software.
+* Real-time Display of Query Results: Query results should be displayed quickly without significant delay, providing a good user experience.
+* System Stability and Reliability: The system should have good stability and reliability, avoiding crashes or abnormal situations.
+* Data Security: User input information should be effectively protected and inaccessible or tampered with by unauthorized personnel.
+* Compatibility: The software should have good compatibility and be able to run normally on different operating systems and browsers.
+* Ease of Maintenance: The code should have a good structure and comments, facilitating future maintenance and modification.
 
-### 设计
+### Design
 
-#### 技术选型
+#### Technology Selection
 
-* 前端技术选择 : 前端界面采用Streamlit框架，该框架基于Python，具有简单易用的特点，可快速搭建交互式Web应用。
-* 后端处理 : 后端使用Python进行数据处理和图形展示，Python作为一种高级编程语言，具有丰富的数据处理库和可视化工具，并且借助Streamlit的图形组件展示股权穿透图，能够满足复杂数据处理和图形展示的需求。
-* 数据存储方式 : 数据存储使用CSV文件格式，CSV文件具有简单、通用的特点，易于存储和处理结构化数据，同时也便于与其他系统进行数据交换和共享。
-* 用户界面设计 : 用户界面设计应简洁明了，符合用户习惯，提供良好的用户体验。可以考虑使用图表、图形等方式直观展示数据，同时提供查询和筛选功能，方便用户快速获取所需信息。
+* Frontend Technology: The frontend interface is built using the Streamlit framework, which is based on Python. It is known for its simplicity and ease of use, allowing for the rapid development of interactive web applications.
+* Backend Processing: Python is used for backend data processing and graphical display. Python, as a high-level programming language, offers rich data processing libraries and visualization tools. Combined with Streamlit's graphical components for displaying the equity structure diagram, it can meet the requirements for complex data processing and graphical display.
+* Data Storage: Data is stored in CSV file format. CSV files are simple and widely used, making them easy to store and process structured data. They are also convenient for data exchange and sharing with other systems.
+* User Interface Design: The user interface design should be simple, intuitive, and user-friendly. It should comply with user habits and provide a good user experience. Consider using charts, graphs, and other visualizations to intuitively display data, while also providing query and filtering functions for users to quickly obtain the information they need.
 
-#### 数据流程
+#### Data Flow
 
-- 用户输入股票代码。
-- 后端根据股票代码查询相关股权信息。
-- 根据股权信息生成股权穿透图数据。
-- 将股权穿透图数据传输给前端进行展示。
+* User inputs a stock code.
+* The backend queries relevant equity information based on the stock code.
+* Generates equity structure diagram data based on the equity information.
+* Transfers the equity structure diagram data to the frontend for display.
 
-### 测试
+### Testing
 
-#### 单元测试
+#### Unit Testing
 
-针对各个模块编写单元测试，检查功能是否按预期工作。
+Write unit tests for each module to check if the functions work as expected.
 
-#### 集成测试
+#### Integration Testing
 
-测试系统各部分之间的交互和协作，确保系统整体功能正常。
+Test the interaction and collaboration between different parts of the system to ensure the overall functionality is correct.
 
-#### 用户测试
+#### User Testing
 
-邀请用户使用系统，收集反馈意见，优化用户体验和功能。
+Invite users to use the system, collect feedback, and optimize the user experience and functionality.
 
-### 用户手册
+### User Manual
 
-#### 界面介绍
+#### Interface Introduction
 
-- 输入框：用于输入股票代码与number of companies with the highest shareholding ratio。
-- 界面左侧图例：解释股权穿透图中各种标记和颜色的含义，包括不同实体框的区分，风险等级说明，业务分类说明。
+* Input Box: Used to enter the stock code and the number of companies with the highest shareholding ratio.
+* Legend on the Left Side of the Interface: Explains the meaning of various marks and colors in the equity penetration graph, including the distinction between different entity frames, risk level explanations, and business classification explanations.
 
-#### 操作步骤
+#### Operating Steps
 
-1. 输入股票代码与number of companies with the highest shareholding ratio（可选，默认为5）。
-2. 回车键确认搜索
-3. 查看股权穿透图及相关信息。
+1. Enter the stock code and the number of companies with the highest shareholding ratio (optional, default is 5).
+2. Press Enter to confirm the search.
+3. View the equity penetration graph and related information.
 
-#### 注意事项
+#### Notes
 
-- 输入正确的股票代码。
-- 确保网络连接正常。
-- 如有疑问或问题，请联系开发团队。
+* Enter the correct stock code.
+* Ensure that the network connection is normal.
+* If you have any questions or problems, please contact the development team.
 
-### 源代码
+### Source code
 
 ```python
 from collections import defaultdict

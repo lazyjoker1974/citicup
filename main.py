@@ -264,30 +264,3 @@ if user_input:
         react_flow("tree", elements=elements, flow_styles=flowStyles)
     except:
         pass
-
-
-
-
-# if user_input:
-#     try:
-#         stock_name = get_stock_name(data, user_input)
-#         st.markdown(f'<h5 style="color: gray;">Equity Structure Diagram of {user_input}（{stock_name}）:</h5>', unsafe_allow_html=True)
-#         edges = search(data, user_input)
-#         edges1 = [edge for edge in edges if edge[6] == '1']
-#         edges2 = [edge for edge in edges if edge[6] == '0']
-#         edges = edges1 + get_top_n_subsidiaries(edges2, n=top_n) # 这里表示每个公司只留下持股比例最高的n(例如n=5)家子公司
-#         nodes_list = []
-#         edges_list = []
-#         for name in list(set([edge[0] for edge in edges] + [edge[1] for edge in edges])):
-#             if name in list(set([edge[0] for edge in edges])):
-#                 nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(255, 228, 196, 0.5)", clickNode=True, font={'bold': True, 'color': '#FF8C00'}))
-
-#             else:
-#                 nodes_list.append(Node(id=name, label=name, size=100, shape="ellipse", color="rgba(128,128,128,0.1)", clickNode=True, font={'bold': False}))
-#         for edge in edges:
-#             edges_list.append(Edge(source=edge[0], label=str(edge[5][5:]) + (', 持股比例: ' + str(edge[2]) + '%' if not pd.isnull(edge[2]) else ''), target=edge[1], length=max(200, 10*len(edges)))) 
-        
-#         config = Config(width=900, height=600, directed=True, physics=True, hierarchical=True, )
-#         return_value = agraph(nodes=nodes_list, edges=edges_list, config=config)
-#     except:
-#         pass

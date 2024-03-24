@@ -164,7 +164,7 @@ try:
 except:
     top_n = 5
   
-          
+  
 
 
 with st.sidebar:
@@ -227,7 +227,7 @@ if user_input:
             style = {"color": "orange"}
         else:
             style = {"color": "red"}
-      
+  
         elements1 = [{"id": target_company_name, "data": {"label": target_company_name}, "style": style, "position": {"x": x, "y": y}}] # 目标企业
         elements2 = []
         if number_of_layer1: # 向下一次股权穿透
@@ -240,7 +240,7 @@ if user_input:
                 style = {"width": "80px", "height": "120px"}
                 if edge[4] == '1': # 海外实体，用虚线红框边界
                     style["border"] = "2px dashed red"
-                                                  
+            
                 if edge[3] == '研发':
                     style["background-color"] = "#99ffcc"
                 elif edge[3] == '生产':
@@ -250,13 +250,13 @@ if user_input:
                 elif edge[3] == '投资':
                     style["background-color"] = "#cce5ff"
                 else:
-                    style["background-color"] = "#fce8e6"         
+                    style["background-color"] = "#fce8e6"   
 
-      
-      
+  
+  
                 elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                 elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
-              
+  
         if number_of_layer_neg1: # 向上一次股权穿透
             x_interval = 200
             x_layer1_first = x - int(number_of_layer_neg1 / 2) * x_interval
@@ -269,10 +269,10 @@ if user_input:
                     style["border"] = "2px dashed red"
                 if '自然人' in edge[5]: # 实控人为 "color": "blue"
                     style["color"] = "blue"
-                  
+  
                 elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                 elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[1], "target": edge[0], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
-      
+  
         if number_of_layer2: # 向下二次股权穿透
             edges_layer_1_2.sort(key=lambda x: x[0])
             edges_layer_1_2 = [list(group) for key, group in groupby(edges_layer_1_2, key=lambda x: x[0])]
@@ -294,7 +294,7 @@ if user_input:
                     if edge[1] not in elements_down_temp:
                         if edge[4] == '1': # 海外实体，用虚线红框边界
                             style["border"] = "2px dashed red"
-                              
+  
                         if edge[3] == '研发':
                             style["background-color"] = "#99ffcc"
                         elif edge[3] == '生产':
@@ -305,10 +305,10 @@ if user_input:
                             style["background-color"] = "#cce5ff"
                         else:
                             style["background-color"] = "#fce8e6"   
-                  
+  
                         elements1.extend([{"id": edge[1], "data": {"label": edge[1]}, "position": {"x": x_pos, "y": y_pos}, "style": style}])
                         elements2.extend([{"id": f"{edge[0]}-{edge[1]}", "source": edge[0], "target": edge[1], "label": (str(edge[2]) + '%' if not pd.isnull(edge[2]) else '')},])
-          
+  
         if number_of_layer_neg2: # 向上二次股权穿透
             edges_shareholder_1_2.sort(key=lambda x: x[0])
             edges_shareholder_1_2 = [list(group) for key, group in groupby(edges_shareholder_1_2, key=lambda x: x[0])]
@@ -339,6 +339,6 @@ if user_input:
         flowStyles = {"height": 500, "width": 1000}
         react_flow("tree", elements=elements, flow_styles=flowStyles)
     except:
-        pass# 您的源代码，请参考上面提供的完整代码。
+        pass
 
 ```

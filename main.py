@@ -8,6 +8,7 @@ import streamlit as st
 # from streamlit_agraph import Config, Edge, Node, agraph
 from streamlit_react_flow import react_flow
 
+st.markdown("### 股权视界 ShareVision")
 
 def get_top_n_subsidiaries(edges2, n=5): # 取每个公司前 n 个子公司
     subsidiaries_dict = defaultdict(list)
@@ -78,6 +79,8 @@ def search_shareholder(data, input_ticker):
 
 data = pd.read_csv('data/data.csv', dtype=str)
 df = pd.read_csv('data/十大股东.csv', dtype=str)
+map_risk = pd.read_csv('data/风险等级.csv', dtype=str)
+map_dict = dict(zip(map_risk['证券代码.x'], map_risk['股权架构等级']))
 user_input = st.text_input("Enter stock code (e.g.: 000009)")
 
 try:
@@ -86,8 +89,7 @@ except:
     top_n = 5
     
             
-import streamlit as st
-from streamlit_react_flow import react_flow
+
 
 with st.sidebar:
     st.markdown("# 股权穿刺图查询软件")
@@ -97,11 +99,31 @@ with st.sidebar:
     st.markdown("<div class='black-solid-box'>黑色实线框：国内实体</div>", unsafe_allow_html=True)
     st.markdown("黑色字体：公司名称</div>", unsafe_allow_html=True)
     st.markdown("<div style='color: blue;'>蓝色字体：控制人</div>", unsafe_allow_html=True)
+    st.markdown("# 风险等级说明：")
+    st.markdown("共有A, B, C, D四个档次，风险等级从A到D依次升高")
+    st.markdown("<font color='darkred'>这是风险等级 A</font>", unsafe_allow_html=True)
+    st.markdown("<font color='darkgreen'>这是风险等级 B</font>", unsafe_allow_html=True)
+    st.markdown("<font color='orange'>这是风险等级 C</font>", unsafe_allow_html=True)
+    st.markdown("<font color='red'>这是风险等级 D</font>", unsafe_allow_html=True)
+    st.markdown("# 按照业务分类")
+    # st.markdown("<div style='background-color: pink; padding: 5px;'>业务1</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ffcccc; color: #990000; padding: 5px;'>业务1</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ffe6cc; color: #cc6600; padding: 5px;'>业务2</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ffffcc; color: #999900; padding: 5px;'>业务3</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #e6ffcc; color: #006600; padding: 5px;'>业务4</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ccfff5; color: #009999; padding: 5px;'>业务5</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #cce5ff; color: #003366; padding: 5px;'>业务6</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ccccff; color: #333399; padding: 5px;'>业务7</div>", unsafe_allow_html=True)
+    st.markdown("<div style='background-color: #ffccff; color: #990099; padding: 5px;'>业务8</div>", unsafe_allow_html=True)
+
+
+
 
 
 if user_input:
     try:
         stock_name = get_stock_name(data, user_input)
+        risk = map_dict[user_input]
         st.markdown(f'<h5 style="color: gray;">Equity Structure Diagram of {user_input}（{stock_name}）:</h5>', unsafe_allow_html=True)
         edges = search(data, user_input)
         edges_shareholder = search_shareholder(df, user_input)
@@ -122,8 +144,17 @@ if user_input:
         x, y = 200, 150
         elements_down_temp = []
         elements_up_temp = []
-        elements1, elements2 = [{"id": target_company_name, "data": {"label": target_company_name}, "position": {"x": x, "y": y}}], [] # 目标企业
+        if risk == 'A':
+            style = {"color": "darkred"}
+        elif risk == 'B':
+            style = {"color": "darkgreen"}
+        elif risk == 'C':
+            style = {"color": "orange"}
+        else:
+            style = {"color": "red"}
         
+        elements1 = [{"id": target_company_name, "data": {"label": target_company_name}, "style": style, "position": {"x": x, "y": y}}] # 目标企业
+        elements2 = []
         if number_of_layer1: # 向下一次股权穿透
             x_interval = 200
             x_layer1_first = x - int(number_of_layer1 / 2) * x_interval
